@@ -1,8 +1,8 @@
 #ifndef AISDI_LINEAR_VECTOR_H
 #define AISDI_LINEAR_VECTOR_H
 
-#define SPACE_RESIZING_OFFSET 100
-#define SPACE_RESIZING_FACTOR 2
+#define RESIZING_OFFSET 100
+#define RESIZING_FACTOR 2
 
 #include <cstddef>
 #include <initializer_list>
@@ -42,23 +42,38 @@ namespace aisdi
             void allocateMoreSpace() {
                 size_type more_space;
                 if (allocated_space == 0) {
-                    more_space = SPACE_RESIZING_OFFSET;
+                    more_space = RESIZING_OFFSET;
                 } else {
-                    more_space = SPACE_RESIZING_FACTOR * allocated_space;
+                    more_space = RESIZING_FACTOR * allocated_space;
                 }
                 allocateSpace(more_space);
             }
 
-            void optimizeSpace() {
-                size_t srf_squared;
-                srf_squared = SPACE_RESIZING_FACTOR * SPACE_RESIZING_FACTOR;
-                if (
-                    size > SPACE_RESIZING_OFFSET
-                    && size < (allocated_space / srf_squared)
-                ) {
-                    allocateSpace(allocated_space / SPACE_RESIZING_FACTOR);
+            size_type calculateRequiredSpace(size_type content_size) {
+                size_type required_space = RESIZING_OFFSET;
+                if (content_size < RESIZING_OFFSET) {
+                    return required_space;
+                } else {
+                    do {
+                        required_space *= RESIZING_FACTOR;
+                    } while (content_size < required_space);
+                    return required_space;
                 }
             }
+
+            /*
+             #define OPTIMIZING_FACTOR 4
+             void optimizeSpace() {
+             bool more_than_offset = size > RESIZING_OFFSET;
+             bool too_much_free_space =
+             size < (allocated_space / OPTIMIZING_FACTOR);
+             if (more_than_offset && too_much_free_space) {
+             size_type required_space;
+             required_space = calculateRequiredSpace(size);
+             allocateSpace(required_space);
+             }
+             }
+             */
 
         public:
             class ConstIterator;
@@ -70,8 +85,15 @@ namespace aisdi
             }
 
             Vector(std::initializer_list<Type> l) {
-                (void) l; // disables "unused argument" warning, can be removed when method is implemented.
-                throw std::runtime_error("TODO");
+                size_type required_space;
+                required_space = calculateRequiredSpace(l.size());
+                allocateSpace(required_space);
+                int i = 0;
+                typename std::initializer_list<Type>::iterator it;
+                for (it = std::begin(l); it != std::end(l); ++it) {
+                    *(head + (i++)) = *it;
+                }
+                size = l.size();
             }
 
             Vector(const Vector& other) {
@@ -88,13 +110,27 @@ namespace aisdi
             }
 
             Vector& operator=(const Vector& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (this != &other) {
+                    delete[] head;
+                    head = other.head;
+                    size = other.size;
+                    allocated_space = other.allocated_space;
+                }
+                return *this;
             }
 
+            // Move assignment operator
             Vector& operator=(Vector&& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (this != &other) {
+                    delete[] head;
+                    head = other.head;
+                    size = other.size;
+                    allocated_space = other.allocated_space;
+                    other.head = nullptr;
+                    other.size = 0;
+                    other.allocated_space = 0;
+                }
+                return *this;
             }
 
             bool isEmpty() const {
@@ -118,12 +154,19 @@ namespace aisdi
             }
 
             void prepend(const Type& item) {
-                (void) item;
-                throw std::runtime_error("TODO");
+                if (size == allocated_space) {
+                    allocateMoreSpace();
+                }
+                for (size_type i = size; i > 0; i--) {
+                    *(head + i) = *(head + i - 1);
+                }
+                *head = item;
+                size++;
             }
 
-            void insert(const const_iterator& insertPosition,
-                    const Type& item) {
+            void insert(
+                const const_iterator& insertPosition,
+                const Type& item) {
                 (void) insertPosition;
                 (void) item;
                 throw std::runtime_error("TODO");
@@ -142,8 +185,9 @@ namespace aisdi
                 throw std::runtime_error("TODO");
             }
 
-            void erase(const const_iterator& firstIncluded,
-                    const const_iterator& lastExcluded) {
+            void erase(
+                const const_iterator& firstIncluded,
+                const const_iterator& lastExcluded) {
                 (void) firstIncluded;
                 (void) lastExcluded;
                 throw std::runtime_error("TODO");
@@ -239,7 +283,7 @@ namespace aisdi
             }
 
             Iterator(const ConstIterator& other) :
-                    ConstIterator(other) {
+                ConstIterator(other) {
             }
 
             Iterator& operator++() {
