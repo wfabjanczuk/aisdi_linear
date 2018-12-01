@@ -23,31 +23,10 @@ namespace aisdi
             using const_pointer = const Type*;
             using const_reference = const Type&;
 
-            // private
-        public:
-            pointer head = nullptr;
-            size_type size = 0;
-            size_type allocated_space = 0;
-
-            void allocateSpace(size_type space) {
-                pointer old_head = head;
-                head = new Type[space];
-                allocated_space = space;
-                for (size_type i = 0; i < size; i++) {
-                    *(head + i) = *(old_head + i);
-                }
-                delete[] old_head;
-            }
-
-            void allocateMoreSpace() {
-                size_type more_space;
-                if (allocated_space == 0) {
-                    more_space = RESIZING_OFFSET;
-                } else {
-                    more_space = RESIZING_FACTOR * allocated_space;
-                }
-                allocateSpace(more_space);
-            }
+        private:
+            pointer head;
+            size_type size;
+            size_type allocated_space;
 
             size_type calculateRequiredSpace(size_type content_size) {
                 size_type required_space = RESIZING_OFFSET;
@@ -61,19 +40,25 @@ namespace aisdi
                 }
             }
 
-            /*
-             #define OPTIMIZING_FACTOR 4
-             void optimizeSpace() {
-             bool more_than_offset = size > RESIZING_OFFSET;
-             bool too_much_free_space =
-             size < (allocated_space / OPTIMIZING_FACTOR);
-             if (more_than_offset && too_much_free_space) {
-             size_type required_space;
-             required_space = calculateRequiredSpace(size);
-             allocateSpace(required_space);
-             }
-             }
-             */
+            void reallocate(size_type new_space) {
+                pointer old_head = head;
+                head = new Type[new_space];
+                allocated_space = new_space;
+                for (size_type i = 0; i < size; i++) {
+                    *(head + i) = *(old_head + i);
+                }
+                delete[] old_head;
+            }
+
+            void stretch() {
+                size_type more_space;
+                if (allocated_space == 0) {
+                    more_space = RESIZING_OFFSET;
+                } else {
+                    more_space = RESIZING_FACTOR * allocated_space;
+                }
+                reallocate(more_space);
+            }
 
         public:
             class ConstIterator;
@@ -81,13 +66,15 @@ namespace aisdi
             using iterator = Iterator;
             using const_iterator = ConstIterator;
 
-            Vector() {
+            Vector() :
+                    head(nullptr), size(0), allocated_space(0) {
             }
 
             Vector(std::initializer_list<Type> l) {
                 size_type required_space;
                 required_space = calculateRequiredSpace(l.size());
-                allocateSpace(required_space);
+                head = new Type[required_space];
+                allocated_space = required_space;
                 int i = 0;
                 typename std::initializer_list<Type>::iterator it;
                 for (it = std::begin(l); it != std::end(l); ++it) {
@@ -97,16 +84,20 @@ namespace aisdi
             }
 
             Vector(const Vector& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+                *this = other;
             }
 
-            Vector(Vector&& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+            Vector(Vector&& other) :
+                            head(other.head),
+                            size(other.size),
+                            allocated_space(other.allocated_space) {
+                other.head = nullptr;
+                other.size = 0;
+                other.allocated_space = 0;
             }
 
             ~Vector() {
+                delete[] head;
             }
 
             Vector& operator=(const Vector& other) {
@@ -119,7 +110,6 @@ namespace aisdi
                 return *this;
             }
 
-            // Move assignment operator
             Vector& operator=(Vector&& other) {
                 if (this != &other) {
                     delete[] head;
@@ -147,7 +137,7 @@ namespace aisdi
 
             void append(const Type& item) {
                 if (size == allocated_space) {
-                    allocateMoreSpace();
+                    stretch();
                 }
                 *(head + size) = item;
                 size++;
@@ -155,7 +145,7 @@ namespace aisdi
 
             void prepend(const Type& item) {
                 if (size == allocated_space) {
-                    allocateMoreSpace();
+                    stretch();
                 }
                 for (size_type i = size; i > 0; i--) {
                     *(head + i) = *(head + i - 1);
@@ -165,8 +155,8 @@ namespace aisdi
             }
 
             void insert(
-                const const_iterator& insertPosition,
-                const Type& item) {
+                    const const_iterator& insertPosition,
+                    const Type& item) {
                 (void) insertPosition;
                 (void) item;
                 throw std::runtime_error("TODO");
@@ -186,8 +176,8 @@ namespace aisdi
             }
 
             void erase(
-                const const_iterator& firstIncluded,
-                const const_iterator& lastExcluded) {
+                    const const_iterator& firstIncluded,
+                    const const_iterator& lastExcluded) {
                 (void) firstIncluded;
                 (void) lastExcluded;
                 throw std::runtime_error("TODO");
@@ -283,7 +273,7 @@ namespace aisdi
             }
 
             Iterator(const ConstIterator& other) :
-                ConstIterator(other) {
+                    ConstIterator(other) {
             }
 
             Iterator& operator++() {
