@@ -83,7 +83,8 @@ namespace aisdi
                 size = l.size();
             }
 
-            Vector(const Vector& other) {
+            Vector(const Vector& other) :
+                    Vector() {
                 *this = other;
             }
 
@@ -103,9 +104,12 @@ namespace aisdi
             Vector& operator=(const Vector& other) {
                 if (this != &other) {
                     delete[] head;
-                    head = other.head;
+                    head = new Type[other.allocated_space];
                     size = other.size;
                     allocated_space = other.allocated_space;
+                    for (size_type i = 0; i < size; i++) {
+                        *(head + i) = *(other.head + i);
+                    }
                 }
                 return *this;
             }
@@ -152,51 +156,78 @@ namespace aisdi
                 }
                 *head = item;
                 size++;
+
             }
 
             void insert(
                     const const_iterator& insertPosition,
                     const Type& item) {
-                (void) insertPosition;
-                (void) item;
-                throw std::runtime_error("TODO");
+                if (size == allocated_space) {
+                    stretch();
+                }
+                for (iterator it = end(); it != insertPosition; --it) {
+                    *it = *(it - 1);
+                }
+                iterator insert_position_var(insertPosition);
+                *insert_position_var = item;
+                size++;
             }
 
             Type popFirst() {
-                throw std::runtime_error("TODO");
+                return *begin();
             }
 
             Type popLast() {
-                throw std::runtime_error("TODO");
+                return *(end() - 1);
             }
 
-            void erase(const const_iterator& possition) {
-                (void) possition;
-                throw std::runtime_error("TODO");
+            void erase(const const_iterator& position) {
+                for (iterator it = position; it != end(); ++it) {
+                    if (it + 1 != end()) {
+                        *it = *(it + 1);
+                    }
+                }
+                size--;
             }
 
             void erase(
                     const const_iterator& firstIncluded,
                     const const_iterator& lastExcluded) {
-                (void) firstIncluded;
-                (void) lastExcluded;
-                throw std::runtime_error("TODO");
+                iterator first_included_var(firstIncluded);
+                for (int i = 0; lastExcluded + i != end(); i++) {
+                    *(first_included_var + i) = *(lastExcluded + i);
+                }
+                for (iterator it = firstIncluded; it != lastExcluded; it++) {
+                    size--;
+                }
             }
 
             iterator begin() {
-                throw std::runtime_error("TODO");
+                iterator it;
+                it.vector = this;
+                it.current = head;
+                return it;
             }
 
             iterator end() {
-                throw std::runtime_error("TODO");
+                iterator it;
+                it.vector = this;
+                it.current = head + this->size;
+                return it;
             }
 
             const_iterator cbegin() const {
-                throw std::runtime_error("TODO");
+                const_iterator it;
+                it.vector = this;
+                it.current = head;
+                return it;
             }
 
             const_iterator cend() const {
-                throw std::runtime_error("TODO");
+                const_iterator it;
+                it.vector = this;
+                it.current = head + this->size;
+                return it;
             }
 
             const_iterator begin() const {
@@ -218,47 +249,90 @@ namespace aisdi
             using pointer = typename Vector::const_pointer;
             using reference = typename Vector::const_reference;
 
-            explicit ConstIterator() {
+            pointer current;
+            const Vector* vector;
+
+            explicit ConstIterator() :
+                    current(nullptr), vector(nullptr) {
             }
 
             reference operator*() const {
-                throw std::runtime_error("TODO");
+                if (*this == vector->end()) {
+                    throw std::out_of_range("*");
+                }
+                return *current;
             }
 
             ConstIterator& operator++() {
-                throw std::runtime_error("TODO");
+                if (*this == vector->end()) {
+                    throw std::out_of_range("++");
+                }
+                current++;
+                return *this;
             }
 
             ConstIterator operator++(int) {
-                throw std::runtime_error("TODO");
+                if (*this == vector->end()) {
+                    throw std::out_of_range("++");
+                }
+                ConstIterator it = *this;
+                ++(*this);
+                return it;
             }
 
             ConstIterator& operator--() {
-                throw std::runtime_error("TODO");
+                if (*this == vector->begin()) {
+                    throw std::out_of_range("--");
+                }
+                current--;
+                return *this;
             }
 
             ConstIterator operator--(int) {
-                throw std::runtime_error("TODO");
+                if (*this == vector->begin()) {
+                    throw std::out_of_range("--");
+                }
+                ConstIterator it = *this;
+                --(*this);
+                return it;
             }
 
             ConstIterator operator+(difference_type d) const {
-                (void) d;
-                throw std::runtime_error("TODO");
+                ConstIterator it = *this;
+                for (difference_type i = 0; i < d; i++) {
+                    if (it == vector->end()) {
+                        throw std::out_of_range("++");
+                    }
+                    it.current++;
+                }
+                return it;
             }
 
             ConstIterator operator-(difference_type d) const {
-                (void) d;
-                throw std::runtime_error("TODO");
+                ConstIterator it = *this;
+                for (difference_type i = 0; i < d; i++) {
+                    if (it == vector->begin()) {
+                        throw std::out_of_range("--");
+                    }
+                    it.current--;
+                }
+                return it;
             }
 
             bool operator==(const ConstIterator& other) const {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (current == other.current && vector == other.vector) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
 
             bool operator!=(const ConstIterator& other) const {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (current == other.current && vector == other.vector) {
+                    return false;
+                } else {
+                    return true;
+                }
             }
     };
 
@@ -269,7 +343,8 @@ namespace aisdi
             using pointer = typename Vector::pointer;
             using reference = typename Vector::reference;
 
-            explicit Iterator() {
+            explicit Iterator() :
+                    ConstIterator() {
             }
 
             Iterator(const ConstIterator& other) :
