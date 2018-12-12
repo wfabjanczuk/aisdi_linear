@@ -1,7 +1,7 @@
 #ifndef AISDI_LINEAR_VECTOR_H
 #define AISDI_LINEAR_VECTOR_H
 
-#define RESIZING_OFFSET 100
+#define RESIZING_OFFSET 1
 #define RESIZING_FACTOR 2
 
 #include <cstddef>
@@ -27,18 +27,6 @@ namespace aisdi
             pointer head;
             size_type size;
             size_type allocated_space;
-
-            size_type calculateRequiredSpace(size_type content_size) {
-                size_type required_space = RESIZING_OFFSET;
-                if (content_size < RESIZING_OFFSET) {
-                    return required_space;
-                } else {
-                    do {
-                        required_space *= RESIZING_FACTOR;
-                    } while (content_size < required_space);
-                    return required_space;
-                }
-            }
 
             void reallocate(size_type new_space) {
                 pointer old_head = head;
@@ -71,10 +59,8 @@ namespace aisdi
             }
 
             Vector(std::initializer_list<Type> l) {
-                size_type required_space;
-                required_space = calculateRequiredSpace(l.size());
-                head = new Type[required_space];
-                allocated_space = required_space;
+                head = new Type[l.size()];
+                allocated_space = l.size();
                 int i = 0;
                 typename std::initializer_list<Type>::iterator it;
                 for (it = std::begin(l); it != std::end(l); ++it) {
