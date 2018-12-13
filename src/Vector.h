@@ -23,6 +23,11 @@ namespace aisdi
             using const_pointer = const Type*;
             using const_reference = const Type&;
 
+            class ConstIterator;
+            class Iterator;
+            using iterator = Iterator;
+            using const_iterator = ConstIterator;
+
         private:
             pointer head;
             size_type size;
@@ -48,12 +53,18 @@ namespace aisdi
                 reallocate(more_space);
             }
 
-        public:
-            class ConstIterator;
-            class Iterator;
-            using iterator = Iterator;
-            using const_iterator = ConstIterator;
+            void insertWhenEnoughSpace(
+                    const const_iterator& insertPosition,
+                    const Type& item) {
+                size++;
+                for (iterator it = end() - 1; it != insertPosition; --it) {
+                    *it = *(it - 1);
+                }
+                iterator insert_position_var(insertPosition);
+                *insert_position_var = item;
+            }
 
+        public:
             Vector() :
                     head(nullptr), size(0), allocated_space(0) {
             }
@@ -149,14 +160,15 @@ namespace aisdi
                     const const_iterator& insertPosition,
                     const Type& item) {
                 if (size == allocated_space) {
+                    difference_type positionOffset = 0;
+                    for (iterator it = begin(); it != insertPosition; it++) {
+                        positionOffset++;
+                    }
                     stretch();
+                    insertWhenEnoughSpace(begin() + positionOffset, item);
+                } else {
+                    insertWhenEnoughSpace(insertPosition, item);
                 }
-                for (iterator it = end(); it != insertPosition; --it) {
-                    *it = *(it - 1);
-                }
-                iterator insert_position_var(insertPosition);
-                *insert_position_var = item;
-                size++;
             }
 
             Type popFirst() {
@@ -164,6 +176,9 @@ namespace aisdi
             }
 
             Type popLast() {
+                if (isEmpty()) {
+                    throw std::out_of_range("popLast");
+                }
                 return *(end() - 1);
             }
 
@@ -244,14 +259,14 @@ namespace aisdi
 
             reference operator*() const {
                 if (*this == vector->end()) {
-                    throw std::out_of_range("*");
+                    throw std::out_of_range("operator*");
                 }
                 return *current;
             }
 
             ConstIterator& operator++() {
                 if (*this == vector->end()) {
-                    throw std::out_of_range("++");
+                    throw std::out_of_range("operator++");
                 }
                 current++;
                 return *this;
@@ -259,7 +274,7 @@ namespace aisdi
 
             ConstIterator operator++(int) {
                 if (*this == vector->end()) {
-                    throw std::out_of_range("++");
+                    throw std::out_of_range("operator++");
                 }
                 ConstIterator it = *this;
                 ++(*this);
@@ -268,7 +283,7 @@ namespace aisdi
 
             ConstIterator& operator--() {
                 if (*this == vector->begin()) {
-                    throw std::out_of_range("--");
+                    throw std::out_of_range("operator--");
                 }
                 current--;
                 return *this;
@@ -276,7 +291,7 @@ namespace aisdi
 
             ConstIterator operator--(int) {
                 if (*this == vector->begin()) {
-                    throw std::out_of_range("--");
+                    throw std::out_of_range("operator--");
                 }
                 ConstIterator it = *this;
                 --(*this);
@@ -284,24 +299,20 @@ namespace aisdi
             }
 
             ConstIterator operator+(difference_type d) const {
-                ConstIterator it = *this;
-                for (difference_type i = 0; i < d; i++) {
-                    if (it == vector->end()) {
-                        throw std::out_of_range("++");
-                    }
-                    it.current++;
+                if (current + d > vector->head + vector->size) {
+                    throw std::out_of_range("operator+");
                 }
+                ConstIterator it = *this;
+                it.current += d;
                 return it;
             }
 
             ConstIterator operator-(difference_type d) const {
-                ConstIterator it = *this;
-                for (difference_type i = 0; i < d; i++) {
-                    if (it == vector->begin()) {
-                        throw std::out_of_range("--");
-                    }
-                    it.current--;
+                if (current - d < vector->head) {
+                    throw std::out_of_range("operator-");
                 }
+                ConstIterator it = *this;
+                it.current -= d;
                 return it;
             }
 
