@@ -172,17 +172,24 @@ namespace aisdi
             }
 
             Type popFirst() {
-                return *begin();
+                Type firstItem = *begin();
+                erase(begin());
+                return firstItem;
             }
 
             Type popLast() {
                 if (isEmpty()) {
                     throw std::out_of_range("popLast");
                 }
-                return *(end() - 1);
+                Type lastItem = *(end() - 1);
+                erase(end() - 1);
+                return lastItem;
             }
 
             void erase(const const_iterator& position) {
+                if (isEmpty() || position == end()) {
+                    throw std::out_of_range("erase");
+                }
                 for (iterator it = position; it != end(); ++it) {
                     if (it + 1 != end()) {
                         *it = *(it + 1);
@@ -194,13 +201,16 @@ namespace aisdi
             void erase(
                     const const_iterator& firstIncluded,
                     const const_iterator& lastExcluded) {
+                if (isEmpty()) {
+                    throw std::out_of_range("erase");
+                }
+                difference_type size_decrease =
+                        lastExcluded.current - firstIncluded.current;
                 iterator first_included_var(firstIncluded);
                 for (int i = 0; lastExcluded + i != end(); i++) {
                     *(first_included_var + i) = *(lastExcluded + i);
                 }
-                for (iterator it = firstIncluded; it != lastExcluded; it++) {
-                    size--;
-                }
+                size -= size_decrease;
             }
 
             iterator begin() {
