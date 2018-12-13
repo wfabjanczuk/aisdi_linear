@@ -35,7 +35,7 @@ namespace aisdi
 
             void reallocate(size_type new_space) {
                 pointer old_head = head;
-                head = new Type[new_space];
+                head = new value_type[new_space];
                 allocated_space = new_space;
                 for (size_type i = 0; i < size; i++) {
                     *(head + i) = *(old_head + i);
@@ -55,7 +55,7 @@ namespace aisdi
 
             void insertWhenEnoughSpace(
                     const const_iterator& insertPosition,
-                    const Type& item) {
+                    const_reference item) {
                 size++;
                 for (iterator it = end() - 1; it != insertPosition; --it) {
                     *it = *(it - 1);
@@ -69,11 +69,11 @@ namespace aisdi
                     head(nullptr), size(0), allocated_space(0) {
             }
 
-            Vector(std::initializer_list<Type> l) {
-                head = new Type[l.size()];
+            Vector(std::initializer_list<value_type> l) {
+                head = new value_type[l.size()];
                 allocated_space = l.size();
                 int i = 0;
-                typename std::initializer_list<Type>::iterator it;
+                typename std::initializer_list<value_type>::iterator it;
                 for (it = std::begin(l); it != std::end(l); ++it) {
                     *(head + (i++)) = *it;
                 }
@@ -101,7 +101,7 @@ namespace aisdi
             Vector& operator=(const Vector& other) {
                 if (this != &other) {
                     delete[] head;
-                    head = new Type[other.allocated_space];
+                    head = new value_type[other.allocated_space];
                     size = other.size;
                     allocated_space = other.allocated_space;
                     for (size_type i = 0; i < size; i++) {
@@ -136,7 +136,7 @@ namespace aisdi
                 return size;
             }
 
-            void append(const Type& item) {
+            void append(const_reference item) {
                 if (size == allocated_space) {
                     stretch();
                 }
@@ -144,7 +144,7 @@ namespace aisdi
                 size++;
             }
 
-            void prepend(const Type& item) {
+            void prepend(const_reference item) {
                 if (size == allocated_space) {
                     stretch();
                 }
@@ -158,7 +158,7 @@ namespace aisdi
 
             void insert(
                     const const_iterator& insertPosition,
-                    const Type& item) {
+                    const_reference item) {
                 if (size == allocated_space) {
                     difference_type positionOffset = 0;
                     for (iterator it = begin(); it != insertPosition; it++) {
@@ -171,17 +171,17 @@ namespace aisdi
                 }
             }
 
-            Type popFirst() {
-                Type firstItem = *begin();
+            value_type popFirst() {
+                value_type firstItem = *begin();
                 erase(begin());
                 return firstItem;
             }
 
-            Type popLast() {
+            value_type popLast() {
                 if (isEmpty()) {
                     throw std::out_of_range("popLast");
                 }
-                Type lastItem = *(end() - 1);
+                value_type lastItem = *(end() - 1);
                 erase(end() - 1);
                 return lastItem;
             }
