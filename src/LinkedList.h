@@ -36,8 +36,8 @@ namespace aisdi
 
             void eraseAll() {
                 for (auto it = begin(); it != end(); it++) {
-                    head = it.current->next;
-                    delete it.current;
+                    head = it.getCurrent()->next;
+                    delete it.getCurrent();
                     size--;
                 }
             }
@@ -47,19 +47,19 @@ namespace aisdi
                     head = nullptr;
                     tail = nullptr;
                     size = 0;
-                    delete it.current;
+                    delete it.getCurrent();
                     return false;
                 } else if (it == begin()) {
-                    head = it.current->next;
-                    it.current->next->previous = nullptr;
+                    head = it.getCurrent()->next;
+                    it.getCurrent()->next->previous = nullptr;
                 } else if (it == end() - 1) {
-                    tail = it.current->previous;
-                    it.current->previous->next = nullptr;
+                    tail = it.getCurrent()->previous;
+                    it.getCurrent()->previous->next = nullptr;
                 } else {
-                    it.current->previous->next = it.current->next;
-                    it.current->next->previous = it.current->previous;
+                    it.getCurrent()->previous->next = it.getCurrent()->next;
+                    it.getCurrent()->next->previous = it.getCurrent()->previous;
                 }
-                delete it.current;
+                delete it.getCurrent();
                 size--;
                 return true;
             }
@@ -95,7 +95,7 @@ namespace aisdi
                 if (this != &other) {
                     eraseAll();
                     for (auto it = other.begin(); it != other.end(); it++) {
-                        append(it.current->item);
+                        append(it.getCurrent()->item);
                     }
                 }
                 return *this;
@@ -160,12 +160,11 @@ namespace aisdi
                     append(item);
                 } else {
                     iterator it = insertPosition;
-                    it.current->previous->next = new element(
+                    it.getCurrent()->previous->next = new element(
                             item,
-                            it.current->previous,
-                            it.current->previous->next);
-                    it.current->next->previous->previous = it.current->previous
-                            ->next;
+                            it.getCurrent()->previous,
+                            it.getCurrent()->previous->next);
+                    it.getCurrent()->previous = it.getCurrent()->previous->next;
                 }
             }
 
@@ -282,6 +281,10 @@ namespace aisdi
                     current(nullptr), list(nullptr) {
             }
 
+            element_pointer getCurrent() const {
+                return current;
+            }
+
             reference operator*() const {
                 if (list->isEmpty()) {
                     throw std::out_of_range("operator*");
@@ -349,7 +352,7 @@ namespace aisdi
             }
 
             bool operator==(const ConstIterator& other) const {
-                if (current == other.current && list == other.list) {
+                if (current == other.getCurrent() && list == other.list) {
                     return true;
                 } else {
                     return false;
@@ -357,7 +360,7 @@ namespace aisdi
             }
 
             bool operator!=(const ConstIterator& other) const {
-                if (current == other.current && list == other.list) {
+                if (current == other.getCurrent() && list == other.list) {
                     return false;
                 } else {
                     return true;
@@ -413,6 +416,10 @@ namespace aisdi
             reference operator*() const {
                 // ugly cast, yet reduces code duplication.
                 return const_cast<reference>(ConstIterator::operator*());
+            }
+
+            element_pointer getCurrent() const {
+                return const_cast<element_pointer>(ConstIterator::getCurrent());
             }
     };
 
