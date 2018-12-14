@@ -165,10 +165,22 @@ namespace aisdi
                 if (isEmpty() || position == end()) {
                     throw std::out_of_range("erase");
                 }
-                if (position == begin()) {
+                if (size == 1) {
+                    head = nullptr;
+                    tail = nullptr;
+                    size = 0;
+                    delete position.current;
+                    return;
+                } else if (position == begin()) {
                     head = position.current->next;
+                    position.current->next->previous = nullptr;
+                } else if (position == end() - 1) {
+                    tail = position.current->previous;
+                    position.current->previous->next = nullptr;
                 } else {
                     position.current->previous->next = position.current->next;
+                    position.current->next->previous = position.current
+                            ->previous;
                 }
                 delete position.current;
                 size--;
@@ -183,10 +195,21 @@ namespace aisdi
                 iterator temp;
                 iterator it = firstIncluded;
                 while (it != lastExcluded) {
-                    if (it == begin()) {
+                    if (size == 1) {
+                        head = nullptr;
+                        tail = nullptr;
+                        size = 0;
+                        delete it.current;
+                        return;
+                    } else if (it == begin()) {
                         head = it.current->next;
+                        it.current->next->previous = nullptr;
+                    } else if (it == end() - 1) {
+                        tail = it.current->previous;
+                        it.current->previous->next = nullptr;
                     } else {
                         it.current->previous->next = it.current->next;
+                        it.current->next->previous = it.current->previous;
                     }
                     temp = it + 1;
                     delete it.current;
@@ -196,22 +219,30 @@ namespace aisdi
             }
 
             iterator begin() {
-                iterator it(head, this);
+                iterator it;
+                it.current = head;
+                it.list = this;
                 return it;
             }
 
             iterator end() {
-                iterator it(nullptr, this);
+                iterator it;
+                it.current = nullptr;
+                it.list = this;
                 return it;
             }
 
             const_iterator cbegin() const {
-                const_iterator it(head, this);
+                iterator it;
+                it.current = head;
+                it.list = this;
                 return it;
             }
 
             const_iterator cend() const {
-                const_iterator it(nullptr, this);
+                iterator it;
+                it.current = nullptr;
+                it.list = this;
                 return it;
             }
 
@@ -259,10 +290,6 @@ namespace aisdi
 
             explicit ConstIterator() :
                     current(nullptr), list(nullptr) {
-            }
-
-            ConstIterator(element_pointer current, const LinkedList* list) :
-                    current(current), list(list) {
             }
 
             reference operator*() const {
@@ -357,10 +384,6 @@ namespace aisdi
 
             explicit Iterator() :
                     ConstIterator() {
-            }
-
-            Iterator(element_pointer current, LinkedList* list) :
-                    ConstIterator(current, list) {
             }
 
             Iterator(const ConstIterator& other) :
