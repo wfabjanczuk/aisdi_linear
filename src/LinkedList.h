@@ -20,109 +20,199 @@ namespace aisdi
             using const_pointer = const Type*;
             using const_reference = const Type&;
 
+            class LinkedListElement;
             class ConstIterator;
             class Iterator;
+            using element = LinkedListElement;
+            using element_pointer = LinkedListElement*;
+            using const_element_pointer = const LinkedListElement*;
             using iterator = Iterator;
             using const_iterator = ConstIterator;
 
         private:
-            pointer head;
+            element_pointer head;
+            element_pointer tail;
             size_type size;
+
+            void eraseAll() {
+                for (auto it = begin(); it != end(); it++) {
+                    head = it.current->next;
+                    delete it.current;
+                    size--;
+                }
+            }
 
         public:
             LinkedList() :
-                    head(nullptr), size(0) {
+                    head(nullptr), tail(nullptr), size(0) {
             }
 
-            LinkedList(std::initializer_list<value_type> l) {
-                (void) l; // disables "unused argument" warning, can be removed when method is implemented.
-                throw std::runtime_error("TODO");
+            LinkedList(std::initializer_list<value_type> l) :
+                    LinkedList() {
+                for (auto it = std::begin(l); it != std::end(l); ++it) {
+                    append(*it);
+                }
             }
 
-            LinkedList(const LinkedList& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+            LinkedList(const LinkedList& other) :
+                    LinkedList() {
+                *this = other;
             }
 
-            LinkedList(LinkedList&& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+            LinkedList(LinkedList&& other) :
+                    head(other.head), tail(other.tail), size(other.size) {
+                other.head = nullptr;
+                other.tail = nullptr;
+                other.size = 0;
             }
 
             ~LinkedList() {
             }
 
             LinkedList& operator=(const LinkedList& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (this != &other) {
+                    eraseAll();
+                    for (auto it = other.begin(); it != other.end(); it++) {
+                        append(it.current->item);
+                    }
+                }
+                return *this;
             }
 
             LinkedList& operator=(LinkedList&& other) {
-                (void) other;
-                throw std::runtime_error("TODO");
+                if (this != &other) {
+                    eraseAll();
+                    head = other.head;
+                    tail = other.tail;
+                    size = other.size;
+                    other.head = nullptr;
+                    other.tail = nullptr;
+                    other.size = 0;
+                }
+                return *this;
             }
 
             bool isEmpty() const {
-                throw std::runtime_error("TODO");
+                if (size == 0) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
 
             size_type getSize() const {
-                throw std::runtime_error("TODO");
+                return size;
             }
 
             void append(const_reference item) {
-                (void) item;
-                throw std::runtime_error("TODO");
+                if (isEmpty()) {
+                    head = new element(item, nullptr, nullptr);
+                    tail = head;
+                    size++;
+                } else {
+                    tail->next = new element(item, tail, nullptr);
+                    tail = tail->next;
+                    size++;
+                }
             }
 
             void prepend(const_reference item) {
-                (void) item;
-                throw std::runtime_error("TODO");
+                if (isEmpty()) {
+                    head = new element(item, nullptr, nullptr);
+                    tail = head;
+                    size++;
+                } else {
+                    head->previous = new element(item, nullptr, head);
+                    head = head->previous;
+                    size++;
+                }
+
             }
 
             void insert(
                     const const_iterator& insertPosition,
                     const_reference item) {
-                (void) insertPosition;
-                (void) item;
-                throw std::runtime_error("TODO");
+                if (insertPosition == begin()) {
+                    prepend(item);
+                } else if (insertPosition == end()) {
+                    append(item);
+                } else {
+                    iterator it = insertPosition;
+                    it.current->previous->next = new element(
+                            item,
+                            it.current->previous,
+                            it.current->previous->next);
+                    it.current->next->previous->previous = it.current->previous
+                            ->next;
+                }
             }
 
             value_type popFirst() {
-                throw std::runtime_error("TODO");
+                iterator first = begin();
+                value_type firstItem = *first;
+                erase(first);
+                return firstItem;
             }
 
             value_type popLast() {
-                throw std::runtime_error("TODO");
+                iterator last = end() - 1;
+                value_type lastItem = *last;
+                erase(last);
+                return lastItem;
             }
 
-            void erase(const const_iterator& possition) {
-                (void) possition;
-                throw std::runtime_error("TODO");
+            void erase(const const_iterator& position) {
+                if (isEmpty() || position == end()) {
+                    throw std::out_of_range("erase");
+                }
+                if (position == begin()) {
+                    head = position.current->next;
+                } else {
+                    position.current->previous->next = position.current->next;
+                }
+                delete position.current;
+                size--;
             }
 
             void erase(
                     const const_iterator& firstIncluded,
                     const const_iterator& lastExcluded) {
-                (void) firstIncluded;
-                (void) lastExcluded;
-                throw std::runtime_error("TODO");
+                if (isEmpty()) {
+                    throw std::out_of_range("erase");
+                }
+                iterator temp;
+                iterator it = firstIncluded;
+                while (it != lastExcluded) {
+                    if (it == begin()) {
+                        head = it.current->next;
+                    } else {
+                        it.current->previous->next = it.current->next;
+                    }
+                    temp = it + 1;
+                    delete it.current;
+                    it = temp;
+                    size--;
+                }
             }
 
             iterator begin() {
-                throw std::runtime_error("TODO");
+                iterator it(head, this);
+                return it;
             }
 
             iterator end() {
-                throw std::runtime_error("TODO");
+                iterator it(nullptr, this);
+                return it;
             }
 
             const_iterator cbegin() const {
-                throw std::runtime_error("TODO");
+                const_iterator it(head, this);
+                return it;
             }
 
             const_iterator cend() const {
-                throw std::runtime_error("TODO");
+                const_iterator it(nullptr, this);
+                return it;
             }
 
             const_iterator begin() const {
@@ -131,6 +221,26 @@ namespace aisdi
 
             const_iterator end() const {
                 return cend();
+            }
+    }
+    ;
+
+    template<typename Type>
+    class LinkedList<Type>::LinkedListElement
+    {
+        public:
+            using value_type = typename LinkedList::value_type;
+            using element_pointer = typename LinkedList::element_pointer;
+
+            value_type item;
+            element_pointer previous;
+            element_pointer next;
+
+            LinkedListElement(
+                    value_type item,
+                    element_pointer previous,
+                    element_pointer next) :
+                    item(item), previous(previous), next(next) {
             }
     };
 
@@ -141,28 +251,32 @@ namespace aisdi
             using iterator_category = std::bidirectional_iterator_tag;
             using value_type = typename LinkedList::value_type;
             using difference_type = typename LinkedList::difference_type;
-            using pointer = typename LinkedList::const_pointer;
+            using element_pointer = typename LinkedList::const_element_pointer;
             using reference = typename LinkedList::const_reference;
 
-            pointer current;
+            element_pointer current;
             const LinkedList* list;
 
             explicit ConstIterator() :
                     current(nullptr), list(nullptr) {
             }
 
+            ConstIterator(element_pointer current, const LinkedList* list) :
+                    current(current), list(list) {
+            }
+
             reference operator*() const {
-                if (*this == list->end()) {
+                if (list->isEmpty()) {
                     throw std::out_of_range("operator*");
                 }
-                return *current;
+                return current->item;
             }
 
             ConstIterator& operator++() {
                 if (*this == list->end()) {
                     throw std::out_of_range("operator++");
                 }
-                current++;
+                current = current->next;
                 return *this;
             }
 
@@ -171,42 +285,49 @@ namespace aisdi
                     throw std::out_of_range("operator++");
                 }
                 ConstIterator it = *this;
-                ++(*this);
+                current = current->next;
                 return it;
             }
 
             ConstIterator& operator--() {
                 if (*this == list->begin()) {
                     throw std::out_of_range("operator--");
+                } else if (!list->isEmpty() && current == nullptr) {
+                    current = list->tail;
+                    return *this;
+                } else {
+                    current = current->previous;
+                    return *this;
                 }
-                current--;
-                return *this;
             }
 
             ConstIterator operator--(int) {
                 if (*this == list->begin()) {
                     throw std::out_of_range("operator--");
+                } else if (!list->isEmpty() && current == nullptr) {
+                    ConstIterator it = *this;
+                    current = list->tail;
+                    return it;
+                } else {
+                    ConstIterator it = *this;
+                    current = current->previous;
+                    return it;
                 }
-                ConstIterator it = *this;
-                --(*this);
-                return it;
             }
 
             ConstIterator operator+(difference_type d) const {
-                if (current + d > list->head + list->size) {
-                    throw std::out_of_range("operator+");
-                }
                 ConstIterator it = *this;
-                it.current += d;
+                for (difference_type i = 0; i < d; i++) {
+                    it++;
+                }
                 return it;
             }
 
             ConstIterator operator-(difference_type d) const {
-                if (current - d < list->head) {
-                    throw std::out_of_range("operator-");
-                }
                 ConstIterator it = *this;
-                it.current -= d;
+                for (difference_type i = 0; i < d; i++) {
+                    it--;
+                }
                 return it;
             }
 
@@ -231,11 +352,15 @@ namespace aisdi
     class LinkedList<Type>::Iterator: public LinkedList<Type>::ConstIterator
     {
         public:
-            using pointer = typename LinkedList::pointer;
+            using element_pointer = typename LinkedList::element_pointer;
             using reference = typename LinkedList::reference;
 
             explicit Iterator() :
                     ConstIterator() {
+            }
+
+            Iterator(element_pointer current, LinkedList* list) :
+                    ConstIterator(current, list) {
             }
 
             Iterator(const ConstIterator& other) :
