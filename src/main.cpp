@@ -86,19 +86,22 @@ void test(
 
 int main() {
 
-    test(100, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(1000, 5, prependLabel, &VectorPrepend, &ListPrepend);
+    test(10000, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(100000, 5, prependLabel, &VectorPrepend, &ListPrepend);
+    test(1000000, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(10000000, 5, prependLabel, &VectorPrepend, &ListPrepend);
 
-    test(100, 5, popLastLabel, &VectorPopLast, &ListPopLast);
     test(1000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
+    test(10000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
     test(100000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
+    test(1000000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
     test(10000000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
 
-    test(100, 1, copyLabel, &VectorCopy, &ListCopy);
     test(1000, 1, copyLabel, &VectorCopy, &ListCopy);
+    test(10000, 1, copyLabel, &VectorCopy, &ListCopy);
     test(100000, 1, copyLabel, &VectorCopy, &ListCopy);
+    test(1000000, 1, copyLabel, &VectorCopy, &ListCopy);
     test(10000000, 1, copyLabel, &VectorCopy, &ListCopy);
 
     return 0;
