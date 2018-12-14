@@ -42,6 +42,28 @@ namespace aisdi
                 }
             }
 
+            bool eraseUnit(const const_iterator& it) {
+                if (size == 1) {
+                    head = nullptr;
+                    tail = nullptr;
+                    size = 0;
+                    delete it.current;
+                    return false;
+                } else if (it == begin()) {
+                    head = it.current->next;
+                    it.current->next->previous = nullptr;
+                } else if (it == end() - 1) {
+                    tail = it.current->previous;
+                    it.current->previous->next = nullptr;
+                } else {
+                    it.current->previous->next = it.current->next;
+                    it.current->next->previous = it.current->previous;
+                }
+                delete it.current;
+                size--;
+                return true;
+            }
+
         public:
             LinkedList() :
                     head(nullptr), tail(nullptr), size(0) {
@@ -165,25 +187,7 @@ namespace aisdi
                 if (isEmpty() || position == end()) {
                     throw std::out_of_range("erase");
                 }
-                if (size == 1) {
-                    head = nullptr;
-                    tail = nullptr;
-                    size = 0;
-                    delete position.current;
-                    return;
-                } else if (position == begin()) {
-                    head = position.current->next;
-                    position.current->next->previous = nullptr;
-                } else if (position == end() - 1) {
-                    tail = position.current->previous;
-                    position.current->previous->next = nullptr;
-                } else {
-                    position.current->previous->next = position.current->next;
-                    position.current->next->previous = position.current
-                            ->previous;
-                }
-                delete position.current;
-                size--;
+                eraseUnit(position);
             }
 
             void erase(
@@ -195,26 +199,12 @@ namespace aisdi
                 iterator temp;
                 iterator it = firstIncluded;
                 while (it != lastExcluded) {
-                    if (size == 1) {
-                        head = nullptr;
-                        tail = nullptr;
-                        size = 0;
-                        delete it.current;
-                        return;
-                    } else if (it == begin()) {
-                        head = it.current->next;
-                        it.current->next->previous = nullptr;
-                    } else if (it == end() - 1) {
-                        tail = it.current->previous;
-                        it.current->previous->next = nullptr;
-                    } else {
-                        it.current->previous->next = it.current->next;
-                        it.current->next->previous = it.current->previous;
-                    }
                     temp = it + 1;
-                    delete it.current;
-                    it = temp;
-                    size--;
+                    if (eraseUnit(it)) {
+                        it = temp;
+                    } else {
+                        return;
+                    }
                 }
             }
 
