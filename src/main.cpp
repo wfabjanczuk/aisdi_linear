@@ -10,7 +10,7 @@
 using namespace std;
 
 #define prependLabel "PREPEND PERFORMANCE TEST"
-#define popFirstLabel "POP FIRST PERFORMANCE TEST"
+#define popLastLabel "POP LAST PERFORMANCE TEST"
 #define copyLabel "COPY PERFORMANCE TEST"
 
 namespace
@@ -32,12 +32,12 @@ void ListPrepend(LinkedList<int>& list) {
     list.prepend(1);
 }
 
-void VectorPopFirst(Vector<int>& vector) {
-    vector.popFirst();
+void VectorPopLast(Vector<int>& vector) {
+    vector.popLast();
 }
 
-void ListPopFirst(LinkedList<int>& list) {
-    list.popFirst();
+void ListPopLast(LinkedList<int>& list) {
+    list.popLast();
 }
 
 void VectorCopy(Vector<int>& vector) {
@@ -73,7 +73,7 @@ void test(
     }
     auto finish = chrono::high_resolution_clock::now();
     chrono::duration<double> elapsed = finish - start;
-    cout << "> Vector::prepend elapsed time: " << elapsed.count() << " s\n";
+    cout << "> Vector elapsed time: " << elapsed.count() << " s\n";
 
     start = chrono::high_resolution_clock::now();
     for (int i = 0; i < repeat_count; i++) {
@@ -81,27 +81,24 @@ void test(
     }
     finish = chrono::high_resolution_clock::now();
     elapsed = finish - start;
-    cout << ">   List::prepend elapsed time: " << elapsed.count() << " s\n\n";
+    cout << ">   List elapsed time: " << elapsed.count() << " s\n\n";
 }
 
 int main() {
 
+    test(100, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(1000, 5, prependLabel, &VectorPrepend, &ListPrepend);
-    test(10000, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(100000, 5, prependLabel, &VectorPrepend, &ListPrepend);
-    test(1000000, 5, prependLabel, &VectorPrepend, &ListPrepend);
     test(10000000, 5, prependLabel, &VectorPrepend, &ListPrepend);
 
-    test(1000, 5, popFirstLabel, &VectorPopFirst, &ListPopFirst);
-    test(10000, 5, popFirstLabel, &VectorPopFirst, &ListPopFirst);
-    test(100000, 5, popFirstLabel, &VectorPopFirst, &ListPopFirst);
-    test(1000000, 5, popFirstLabel, &VectorPopFirst, &ListPopFirst);
-    test(10000000, 5, popFirstLabel, &VectorPopFirst, &ListPopFirst);
+    test(100, 5, popLastLabel, &VectorPopLast, &ListPopLast);
+    test(1000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
+    test(100000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
+    test(10000000, 5, popLastLabel, &VectorPopLast, &ListPopLast);
 
+    test(100, 1, copyLabel, &VectorCopy, &ListCopy);
     test(1000, 1, copyLabel, &VectorCopy, &ListCopy);
-    test(10000, 1, copyLabel, &VectorCopy, &ListCopy);
     test(100000, 1, copyLabel, &VectorCopy, &ListCopy);
-    test(1000000, 1, copyLabel, &VectorCopy, &ListCopy);
     test(10000000, 1, copyLabel, &VectorCopy, &ListCopy);
 
     return 0;
